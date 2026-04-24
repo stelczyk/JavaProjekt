@@ -15,6 +15,7 @@ IDE - Eclipse
 .classpath
 .project
 .metadata/
+*.class
 
 Inne
 *.log
