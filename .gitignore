@@ -9,12 +9,14 @@ IDE - IntelliJ
 *.iml
 *.iws
 out/
+*.class
 
 IDE - Eclipse
 .settings/
 .classpath
 .project
 .metadata/
+
 
 Inne
 *.log
