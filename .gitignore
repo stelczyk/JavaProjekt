@@ -9,6 +9,7 @@ IDE - IntelliJ
 *.iml
 *.iws
 out/
+*.class
 
 IDE - Eclipse
 .settings/
@@ -16,6 +17,7 @@ IDE - Eclipse
 .project
 .metadata/
 *.class
+
 
 Inne
 *.log
