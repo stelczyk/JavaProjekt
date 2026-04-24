@@ -1,0 +1,22 @@
+Build tools (Maven/Gradle)
+target/
+build/
+.gradle/
+bin/
+
+IDE - IntelliJ
+.idea/
+*.iml
+*.iws
+out/
+
+IDE - Eclipse
+.settings/
+.classpath
+.project
+.metadata/
+
+Inne
+*.log
+.DS_Store
+.env
