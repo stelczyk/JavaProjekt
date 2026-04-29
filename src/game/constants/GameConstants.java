@@ -14,4 +14,6 @@ public final class GameConstants {
     public static final int DEFAULT_XP_LEVEL = 0;
     public static final int DEFAULT_STAT_POINTS_TO_DISTRIBUTE = 10;
     public static final int DEFAULT_START_ATTRIBUTE_VALUE = 5;
+    public static final int DEFAULT_BOOST_ATTRIBUTE = 1;
+    public static final int DEFAULT_UNBOOST_ATTRIBUTE = 1;
 }
