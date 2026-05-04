@@ -1,0 +1,4 @@
+package game.player.combat.attack.special;
+
+public class CallToFriends {
+}
