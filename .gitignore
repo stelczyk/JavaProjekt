@@ -16,7 +16,7 @@ IDE - Eclipse
 .classpath
 .project
 .metadata/
-*.class
+w*.class
 
 
 Inne
