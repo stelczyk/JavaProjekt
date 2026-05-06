@@ -1,8 +1,8 @@
 package game.player.combat.attack;
 
+import game.arena.ArenaFighterState;
 import game.player.attributes.arena.ArenaAttackPlayer;
 import game.player.attributes.types.ArenaAttackPlayerAttributes;
-import game.player.combat.state.FighterState;
 
 public abstract class AbstractAttack implements ArenaAttackPlayer {
 
@@ -10,12 +10,12 @@ public abstract class AbstractAttack implements ArenaAttackPlayer {
     protected abstract int getBaseStaminaCost();
 
     protected abstract double calculatePrimaryAttributeContribution(ArenaAttackPlayerAttributes attacker);
-    protected abstract double calculateStaminaContribution(FighterState state);
+    protected abstract double calculateStaminaContribution(ArenaFighterState state);
 
     protected abstract double calculateEquipmentContribution(); // to jest na bron miejsce
 
     @Override
-    public final int calculateDamage(ArenaAttackPlayerAttributes attacker, FighterState state) {
+    public final int calculateDamage(ArenaAttackPlayerAttributes attacker, ArenaFighterState state) {
         double attributeValue = calculatePrimaryAttributeContribution(attacker);
         double staminaValue = calculateStaminaContribution(state);
         double equipmentValue = calculateEquipmentContribution();
@@ -28,7 +28,7 @@ public abstract class AbstractAttack implements ArenaAttackPlayer {
     }
 
     @Override
-    public final int attackAccuracyValue(ArenaAttackPlayerAttributes attacker, FighterState state) {
+    public final int attackAccuracyValue(ArenaAttackPlayerAttributes attacker, ArenaFighterState state) {
         double baseAccuracy = attacker.getAccuracy();
         // W przyszłości: + calculateEquipmentAccuracyContribution()
 
@@ -36,7 +36,7 @@ public abstract class AbstractAttack implements ArenaAttackPlayer {
     }
 
     @Override
-    public void applySpecialEffects(FighterState state) {
+    public void applySpecialEffects(ArenaFighterState state) {
         // Po ciosie zawsze ubywa staminy z paska
         state.consumeStamina(getBaseStaminaCost());
     }
