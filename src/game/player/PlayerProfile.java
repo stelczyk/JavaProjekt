@@ -8,7 +8,7 @@ public class PlayerProfile {
     private int playerWeight; // waga++ -> siła++
 
     public PlayerProfile(String playerNickname, int playerAge) {
-        if (playerAge < 0)
+        if (playerAge < 0 || playerAge > 100)
         {
             throw new IllegalArgumentException("Age cannot be negative");
         }
@@ -19,4 +19,23 @@ public class PlayerProfile {
 
     }
 
+    public String getPlayerNickname() {
+        return playerNickname;
+    }
+
+    public int getPlayerAge() {
+        return playerAge;
+    }
+
+    public int getPlayerHeight() {
+        return playerHeight;
+    }
+
+    public int getPlayerWeight() {
+        return playerWeight;
+    }
+
+    public void setPlayerWeight(int playerWeight) {
+        this.playerWeight = playerWeight;
+    }
 }
