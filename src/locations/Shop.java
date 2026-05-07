@@ -66,8 +66,7 @@ public class Shop {
         return ShopResult.SUCCESS;
     }
 
-
-    public void unequipItem(Player player){
+    public void unequipWeapon(Player player) {
         player.getInventory().unequipWeapon();
     }
 
@@ -75,18 +74,16 @@ public class Shop {
         player.getInventory().unequipClothing(slot);
     }
 
-
-    //wyswietla cene z rabatem przed kupnem
-    public int calculateDiscountedPrice(Player player, Item item){
-        //cwaniactwo powyzej wartosci startowej daje poki co 1% rabatu za kazdy punkt i max mozna miec 20%
-        int cunningAboveBase = Math.max(0, player.getAttributes().getCunning() - GameConstants.DEFAULT_START_ATTRIBUTE_VALUE);
-        double discount = Math.min(cunningAboveBase*0.01,0.20);
-        return(int) (item.getPrice()* (1 - discount));
+    // Znajomości powyżej wartości startowej (5) dają 1% rabatu za punkt, max 20%
+    public int calculateDiscountedPrice(Player player, Item item) {
+        int connectionsAboveBase = Math.max(0, player.getAttributes().getConnections() - GameConstants.DEFAULT_START_ATTRIBUTE_VALUE);
+        double discount = Math.min(connectionsAboveBase * 0.01, 0.20);
+        return (int) (item.getPrice() * (1 - discount));
     }
 
-    //sprzedanie zalozonego przedmiotu od razu go zdejmuje
-    private void unequipIfNeeded(Player player, Item item){
-        if(item instanceof Weapon && item.equals(player.getInventory().getEquippedWeapon())){
+    // Sprzedanie założonego przedmiotu od razu go zdejmuje
+    private void unequipIfNeeded(Player player, Item item) {
+        if (item instanceof Weapon && item.equals(player.getInventory().getEquippedWeapon())) {
             player.getInventory().unequipWeapon();
         }
         if (item instanceof Clothing clothing &&

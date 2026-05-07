@@ -1,5 +1,7 @@
 package game.items;
 
+import java.util.Objects;
+
 public abstract class Item {
     private final String name;
     private final int price;
@@ -24,6 +26,20 @@ public abstract class Item {
     }
 
     public int getSellPrice() {
-        return price / 2; //wstępnie dalem, ze mozna sprzedac za polowe cene
+        return price / 2;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Item item)) return false;
+        return price == item.price
+                && requiredLevel == item.requiredLevel
+                && name.equals(item.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, price, requiredLevel);
     }
 }
