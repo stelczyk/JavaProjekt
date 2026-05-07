@@ -1,7 +1,7 @@
 package game.player.attributes.arena;
 
-import game.arena.ArenaFighterState;
 import game.player.combat.FightMove;
+import game.player.combat.state.FighterState;
 import game.player.attributes.types.ArenaAttackPlayerAttributes;
 
 /**
@@ -39,7 +39,7 @@ public interface ArenaAttackPlayer extends FightMove {
      * @param state aktualny stan walki (stamina wpływa na celność)
      * @return surowa wartość accuracy (np. 50)
      */
-    int attackAccuracyValue(ArenaAttackPlayerAttributes attacker, ArenaFighterState state);
+     int attackAccuracyValue(ArenaAttackPlayerAttributes attacker, FighterState state);
 
     /**
      * Oblicza SUROWE OBRAŻENIA przed odjęciem defensywy.
@@ -54,7 +54,7 @@ public interface ArenaAttackPlayer extends FightMove {
      * @param state aktualny stan walki
      * @return surowe obrażenia (np. 45)
      */
-    int calculateDamage(ArenaAttackPlayerAttributes attacker, ArenaFighterState state);
+    int calculateDamage(ArenaAttackPlayerAttributes attacker, FighterState state);
 
     /**
      * Wpływ ataku na publiczność (crowd appeal).
@@ -77,5 +77,5 @@ public interface ArenaAttackPlayer extends FightMove {
      *
      * @param state stan walki atakującego
      */
-    void applySpecialEffects(ArenaFighterState state);
+     void applySpecialEffects(FighterState state);
 }
