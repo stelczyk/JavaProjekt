@@ -1,12 +1,11 @@
 package game.player;
 
 import game.constants.GameConstants;
-import game.player.attributes.ArenaAttributes;
 import game.player.attributes.CharacterAttributeType;
 import game.player.attributes.PlayerAttributes;
 import game.player.attributes.ShopAttributes;
 
-public class PlayerAttribute implements PlayerAttributes, ShopAttributes, ArenaAttributes {
+public class PlayerAttribute implements PlayerAttributes, ShopAttributes {
     private int strength = GameConstants.DEFAULT_START_ATTRIBUTE_VALUE;
     private int defence = GameConstants.DEFAULT_START_ATTRIBUTE_VALUE;
     private int accuracy = GameConstants.DEFAULT_START_ATTRIBUTE_VALUE;
