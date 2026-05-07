@@ -1,5 +1,7 @@
 package game.arena;
 
+import game.player.combat.state.FighterState;
+
 /**
  * Reprezentuje TYMCZASOWY stan gracza/przeciwnika PODCZAS KONKRETNEJ WALKI.
  *
@@ -24,7 +26,7 @@ package game.arena;
  * - Zarządzanie temporary effects (ogłuszenie, zatrucie, itp.)
  * - Reset stanu między rundami
  */
-public class ArenaFighterState {
+public class ArenaFighterState implements FighterState {
 
     // Stan zdrowia w walce (nie permanentny!)
     private int currentHp;
