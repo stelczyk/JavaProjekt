@@ -35,6 +35,7 @@ public class ShopMenu {
             if (player.getStatPointsAvailable() > 0) {
                 System.out.println("  [5] *** Rozdaj punkty statystyk (" + player.getStatPointsAvailable() + " dostępnych) ***");
             }
+            System.out.println("  [6] Statystyki");
             System.out.println("  [0] Wyjdź ze sklepu");
             System.out.print("  Wybór: ");
 
@@ -48,6 +49,7 @@ public class ShopMenu {
                     if (player.getStatPointsAvailable() > 0) distributeStats(player);
                     else System.out.println("  Nieprawidłowy wybór.");
                 }
+                case 6 -> showPlayerStats(player);
                 case 0 -> inShop = false;
                 default -> System.out.println("  Nieprawidłowy wybór.");
             }
@@ -70,8 +72,12 @@ public class ShopMenu {
                 int price = shop.calculateDiscountedPrice(player, w);
                 String locked = player.getLevel() < w.getRequiredLevel()
                         ? "  [poziom " + w.getRequiredLevel() + " wymagany]" : "";
-                System.out.printf("  [%d] %-24s | Siła: +%d | Celność: +%d | %d zł%s%n",
-                        i + 1, w.getName(), w.getStrengthBonus(), w.getAccuracyBonus(), price, locked);
+                String owned = player.getInventory().hasItem(w) ? " [MASZ]" : "";
+                Weapon equipped = player.getInventory().getEquippedWeapon();
+                String strDiff = equipped != null ? diffStr(w.getStrengthBonus(), equipped.getStrengthBonus()) : "";
+                String accDiff = equipped != null ? diffStr(w.getAccuracyBonus(), equipped.getAccuracyBonus()) : "";
+                System.out.printf("  [%d] %-24s | Siła: +%d%-5s | Celność: +%d%-5s | %d zł%s%s%n",
+                        i + 1, w.getName(), w.getStrengthBonus(), strDiff, w.getAccuracyBonus(), accDiff, price, locked, owned);
             }
             System.out.println("  [0] Wróć");
             System.out.print("  Wybór: ");
@@ -102,8 +108,12 @@ public class ShopMenu {
                 int price = shop.calculateDiscountedPrice(player, c);
                 String locked = player.getLevel() < c.getRequiredLevel()
                         ? "  [poziom " + c.getRequiredLevel() + " wymagany]" : "";
-                System.out.printf("  [%2d] %-24s | %-12s | Obr: +%d | Szybk: +%d | %d zł%s%n",
-                        i + 1, c.getName(), c.getSlot().name(), c.getDefenseBonus(), c.getSpeedBonus(), price, locked);
+                String owned = player.getInventory().hasItem(c) ? " [MASZ]" : "";
+                Clothing equippedInSlot = player.getInventory().getEquippedClothing(c.getSlot());
+                String defDiff = equippedInSlot != null ? diffStr(c.getDefenseBonus(), equippedInSlot.getDefenseBonus()) : "";
+                String spdDiff = equippedInSlot != null ? diffStr(c.getSpeedBonus(), equippedInSlot.getSpeedBonus()) : "";
+                System.out.printf("  [%2d] %-24s | %-12s | Obr: +%d%-5s | Szybk: +%d%-5s | %d zł%s%s%n",
+                        i + 1, c.getName(), c.getSlot().name(), c.getDefenseBonus(), defDiff, c.getSpeedBonus(), spdDiff, price, locked, owned);
             }
             System.out.println("  [0] Wróć");
             System.out.print("  Wybór: ");
@@ -307,8 +317,11 @@ public class ShopMenu {
             };
 
             if (type != null) {
-                player.getAttributes().upgradeAttribute(type);
-                player.spendStatPoint();
+                int amount = askForAmount(player.getStatPointsAvailable());
+                for (int i = 0; i < amount; i++) {
+                    player.getAttributes().upgradeAttribute(type);
+                    player.spendStatPoint();
+                }
             } else {
                 System.out.println("  Nieprawidłowy wybór.");
             }
@@ -336,6 +349,7 @@ public class ShopMenu {
             case NOT_ENOUGH_MONEY -> System.out.println("  Brak kasy!");
             case LEVEL_TOO_LOW  -> System.out.println("  Za niski poziom!");
             case ITEM_NOT_OWNED -> System.out.println("  Nie masz tego przedmiotu.");
+            case ALREADY_OWNED    -> System.out.println("  Już to masz!");
         }
     }
 
@@ -350,5 +364,52 @@ public class ShopMenu {
     private boolean readYesNo() {
         String input = scanner.nextLine().trim().toLowerCase();
         return input.equals("t") || input.equals("tak");
+    }
+
+    private void showPlayerStats(Player player) {
+        printHeader(player);
+        System.out.println("=== STATYSTYKI ===");
+        System.out.println("  XP:         " + player.getXp() + " / " + (player.getLevel() * 150));
+        System.out.println("  Max HP:     " + player.getMaxHp());
+        System.out.println();
+        System.out.println("  Siła:       " + player.getAttributes().getStrength());
+        System.out.println("  Obrona:     " + player.getAttributes().getDefense());
+        System.out.println("  Celność:    " + player.getAttributes().getAccuracy());
+        System.out.println("  Stamina:    " + player.getAttributes().getStamina());
+        System.out.println("  Odwaga:     " + player.getAttributes().getBrave());
+        System.out.println("  Cwaniactwo: " + player.getAttributes().getCunning());
+        System.out.println("  Szybkość:   " + player.getAttributes().getSpeed());
+        System.out.println("  Patologia:  " + player.getAttributes().getPathology());
+        System.out.println("  Honor:      " + player.getAttributes().getValor());
+        System.out.println("  Znajomości: " + player.getAttributes().getConnections());
+        System.out.println();
+        System.out.println("  Bonus obrony z ekwipunku:    +" + player.getInventory().getTotalDefenseBonus());
+        System.out.println("  Bonus szybkości z ekwipunku: +" + player.getInventory().getTotalSpeedBonus());
+        System.out.println();
+        System.out.print("  [Enter] Wróć...");
+        scanner.nextLine();
+    }
+
+    private int askForAmount(int available) {
+        while (true) {
+            System.out.print("  Ile punktów? (1-" + available + "): ");
+            try {
+                int amount = Integer.parseInt(scanner.nextLine().trim());
+                if (amount < 1 || amount > available) {
+                    System.out.println("  Podaj liczbę od 1 do " + available + ".");
+                } else {
+                    return amount;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("  Podaj liczbę!");
+            }
+        }
+    }
+
+    private String diffStr(int newVal, int oldVal) {
+        int delta = newVal - oldVal;
+        if (delta > 0) return "(+" + delta + ")";
+        if (delta < 0) return "(" + delta + ")";
+        return "(=)";
     }
 }

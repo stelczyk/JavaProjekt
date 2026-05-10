@@ -17,7 +17,7 @@ public class ItemCatalog {
     public static final List<Clothing> CLOTHING = List.of(
             // GLOWA
             new Clothing("Czapka z daszkiem", 40,  1, 1, 1, ClothingSlot.GLOWA),
-            new Clothing("Kominarka",         90,  2, 2, 0, ClothingSlot.GLOWA),
+            new Clothing("Kominiarka",         90,  2, 2, 0, ClothingSlot.GLOWA),
             new Clothing("Kask motocyklowy",  220, 5, 5, 0, ClothingSlot.GLOWA),
 
             // TULOWIE
@@ -38,6 +38,7 @@ public class ItemCatalog {
             new Clothing("Szalik",            50,  1, 2, 1, ClothingSlot.AKCESORIA),
             new Clothing("Łańcuch na szyi",  130,  3, 1, 2, ClothingSlot.AKCESORIA)
     );
+
 
     private ItemCatalog() {}
 }
