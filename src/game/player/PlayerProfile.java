@@ -5,7 +5,7 @@ public class PlayerProfile {
     private final String playerNickname; // zakładam że w grze nie bedzie możliwosci zmiany kryptonimy
     private final int playerAge; // zakładam ze w grze nie bedzie mozliwosci zmiany wieku (być może potem dodamy zmiane wieku pomiedzy levelami)
     private final int playerHeight;
-    private int playerWeight; // waga++ -> siła++
+    // private int playerWeight; // waga++ -> siła++ (to jest chyba do wyrzucenia)
 
     public PlayerProfile(String playerNickname, int playerAge) {
         if (playerAge < 0 || playerAge > 100)
@@ -15,7 +15,7 @@ public class PlayerProfile {
         this.playerNickname = playerNickname;
         this.playerAge = playerAge;
         this.playerHeight = CharacterBodyType.DEAFULTBODY.getCharacterBodyHeight();
-        this.playerWeight = CharacterBodyType.DEAFULTBODY.getCharacterBodyWeight();
+        // this.playerWeight = CharacterBodyType.DEAFULTBODY.getCharacterBodyWeight();
 
     }
 
@@ -31,11 +31,11 @@ public class PlayerProfile {
         return playerHeight;
     }
 
-    public int getPlayerWeight() {
-        return playerWeight;
-    }
-
-    public void setPlayerWeight(int playerWeight) {
-        this.playerWeight = playerWeight;
-    }
+//    public int getPlayerWeight() {
+//        return playerWeight;
+//    }
+//
+//    public void setPlayerWeight(int playerWeight) {
+//        this.playerWeight = playerWeight;
+//    }
 }

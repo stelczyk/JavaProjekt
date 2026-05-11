@@ -58,8 +58,9 @@ public class ArenaFighter implements
         this.player = player;
 
         // Inicjalizujemy stan walki na podstawie atrybutów gracza
+        // maxStamina zależy od atrybutu Stamina (1 punkt staminy = 10 max staminy w walce)
         int maxHp = player.getMaxHp();
-        int maxStamina = player.getAttributes().getStamina();
+        int maxStamina = player.getAttributes().getStamina() * 10;
         int startingArmor = player.getInventory().getTotalDefenseBonus();
 
         this.state = new ArenaFighterState(maxHp, maxStamina, startingArmor);

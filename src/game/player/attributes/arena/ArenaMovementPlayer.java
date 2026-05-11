@@ -1,7 +1,7 @@
 package game.player.attributes.arena;
 
 import game.player.combat.FightMove;
-import game.player.attributes.MovementDirection;
+import game.player.combat.movement.MovementDirection;
 import game.player.attributes.types.ArenaMovementPlayerAttributes;
 
 public interface ArenaMovementPlayer extends FightMove {
