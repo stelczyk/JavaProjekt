@@ -46,4 +46,11 @@ public abstract class AbstractAttack implements ArenaAttackPlayer {
         // Po ciosie zmienia sie nastawienie publicznosci
         return getAttackStyle().getBaseCrowdAppeal();
     }
+
+    /**
+     * Publiczny getter dla kosztu staminiy - używany w UI i AI.
+     */
+    public int getStaminaCost() {
+        return getBaseStaminaCost();
+    }
 }
