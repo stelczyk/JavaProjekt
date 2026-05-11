@@ -29,6 +29,10 @@ public class Shop {
     }
 
     public ShopResult buyItem(Player player, Item item) {
+
+        if(player.getInventory().hasItem(item)) {
+            return ShopResult.ALREADY_OWNED;
+        }
         if (player.getLevel() < item.getRequiredLevel()) {
             return ShopResult.LEVEL_TOO_LOW;
         }
