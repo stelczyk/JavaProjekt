@@ -23,11 +23,13 @@ import java.util.Random;
  * 4. Integracja: Użyj istniejących metod Shop
  *
  * WAŻNE:
- * - Rywal zaczyna z CZYSTYM ekwipunkiem (DeepCloneUtils.createEmptyInventory())
+ * - Rywal zaczyna z CZYSTYM ekwipunkiem (new PlayerInventory() w DeepCloneUtils)
  * - Najpierw "sprzedajemy" całość gracza (hipotetycznie)
  * - Potem kupujemy nowe przedmioty
  */
 public class RivalEquipmentManager {
+
+    private static final Random RANDOM = new Random();
 
     private static final double BUDGET_MODIFIER_MIN = 0.8;
     private static final double BUDGET_MODIFIER_MAX = 1.2;
@@ -113,7 +115,7 @@ public class RivalEquipmentManager {
      * @param shop shop (do kupna)
      */
     private static void purchaseEquipmentForRival(Player rival, int rivalLevel, Shop shop) {
-        Random random = new Random();
+        Random random = RANDOM;
 
         // STEP 1: Filtruj bronie dostępne dla Rywala
         List<Weapon> availableWeapons = new ArrayList<>();
@@ -172,7 +174,7 @@ public class RivalEquipmentManager {
      * @return modyfikator
      */
     private static double generateBudgetModifier() {
-        Random random = new Random();
+        Random random = RANDOM;
         return random.nextDouble() * (BUDGET_MODIFIER_MAX - BUDGET_MODIFIER_MIN) + BUDGET_MODIFIER_MIN;
     }
 

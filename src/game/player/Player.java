@@ -14,6 +14,7 @@ public class Player {
     private int xp;
     private int money;
     private int statPointsAvailable;
+    private CharacterPath path;
 
     public Player(PlayerProfile profile) {
         this.profile = profile;
@@ -23,6 +24,7 @@ public class Player {
         this.xp = GameConstants.DEFAULT_XP_LEVEL;
         this.money = GameConstants.DEFAULT_STARTING_MONEY;
         this.statPointsAvailable = GameConstants.DEFAULT_STARTING_STAT_POINTS;
+        this.path = CharacterPath.WOJOWNIK; // domyślna ścieżka, zmieniana w CharacterCreationMenu
     }
 
     public PlayerProfile getProfile() {
@@ -58,6 +60,22 @@ public class Player {
         return statPointsAvailable;
     }
 
+    /**
+     * [KACPER] Ścieżka postaci wybrana przez gracza w CharacterCreationMenu.
+     * Używaj w ArenaCombatEngine do bonusów i specjalnych ataków:
+     *
+     *   if (attacker.getPath() == CharacterPath.WOJOWNIK)  → +15% obrażenia wręcz
+     *   if (attacker.getPath() == CharacterPath.LIDER)     → odblokuj LeaderScream
+     *   if (attacker.getPath() == CharacterPath.CWANIAK)   → +10% szansa na unik
+     */
+    public CharacterPath getPath() {
+        return path;
+    }
+
+    public void setPath(CharacterPath path) {
+        this.path = path;
+    }
+
     public boolean spendMoney(int amount) {
         if (amount > money) return false;
         money -= amount;
@@ -90,5 +108,20 @@ public class Player {
 
     private int xpRequiredForNextLevel() {
         return level * 150;
+    }
+
+    /**
+     * Ustawia level bezpośrednio — używane przy generowaniu Rywala.
+     * Zastępuje refleksję w RivalGenerator.reflectiveSetLevel().
+     *
+     * [KACPER] W RivalGenerator.java zamień całą metodę reflectiveSetLevel()
+     * i jej wywołanie na jedną linię:
+     *
+     *   rival.initLevel(rivalLevel);
+     */
+    public void initLevel(int level) {
+        if (level >= 1 && level <= GameConstants.MAX_PLAYER_LEVEL) {
+            this.level = level;
+        }
     }
 }

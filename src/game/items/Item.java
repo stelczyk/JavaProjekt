@@ -6,11 +6,18 @@ public abstract class Item {
     private final String name;
     private final int price;
     private final int requiredLevel;
+    // czy przedmiot znika po użyciu (np. Raca, Mołotow)
+    private final boolean consumable;
 
     public Item(String name, int price, int requiredLevel) {
+        this(name, price, requiredLevel, false);
+    }
+
+    public Item(String name, int price, int requiredLevel, boolean consumable) {
         this.name = name;
         this.price = price;
         this.requiredLevel = requiredLevel;
+        this.consumable = consumable;
     }
 
     public String getName() {
@@ -27,6 +34,21 @@ public abstract class Item {
 
     public int getSellPrice() {
         return price / 2;
+    }
+
+    /**
+     * [KACPER] Czy przedmiot znika po użyciu (Raca, Mołotow = true).
+     * Użyj w ArenaCombatEngine po wykonaniu ataku:
+     *
+     *   Weapon used = attacker.getInventory().getEquippedWeapon();
+     *   if (used != null && used.isConsumable()) {
+     *       attacker.getInventory().unequipWeapon();
+     *       attacker.getInventory().removeItem(used);
+     *       System.out.println(used.getName() + " zostało zużyte!");
+     *   }
+     */
+    public boolean isConsumable() {
+        return consumable;
     }
 
     @Override

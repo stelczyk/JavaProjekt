@@ -2,6 +2,7 @@ package game.arena;
 
 import game.player.Player;
 import game.player.combat.attack.AbstractAttack;
+import game.player.combat.attack.melee.AbstractMeleeAttack;
 import game.player.combat.attack.melee.QuickMeleeAttack;
 import game.player.combat.attack.melee.MediumMeleeAttack;
 import game.player.combat.attack.melee.StrongMeleeAttack;
@@ -11,6 +12,8 @@ import game.player.combat.movement.Step;
 import game.player.combat.movement.Jump;
 import game.player.combat.regeneration.AbstractRegeneratePlayer;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -32,6 +35,7 @@ public class ArenaCombatEngine {
     private final AIDecisionSystem aiSystem;
     private final DamageCalculator damageCalc;
     private final AudienceBar audienceBar;
+    private final Random random = new Random();
 
     // Stany walki
     private ArenaPosition position;
@@ -39,6 +43,10 @@ public class ArenaCombatEngine {
     private ArenaFighter rivalFighter;
     private ArenaFighterState playerState;
     private ArenaFighterState rivalState;
+
+    // Listy ruchów i ataków — inicjalizowane raz na walkę w startMatch()
+    private List<AbstractAttack> rivalAttacks;
+    private List<Move> rivalMoves;
 
     private int turnCount = 0;
     private boolean matchActive = true;
@@ -76,6 +84,8 @@ public class ArenaCombatEngine {
         this.playerState = playerFighter.getState();
         this.rivalState = rivalFighter.getState();
         this.position = new ArenaPosition();
+        this.rivalAttacks = initializeAttacks();
+        this.rivalMoves   = initializeMoves();
 
         // STEP 2: Inicjatywa
         InitiativeSystem initiative = new InitiativeSystem();
@@ -191,9 +201,13 @@ public class ArenaCombatEngine {
         System.out.println("\n⚔️  ATAK: " + attack.getAttackName());
         System.out.println("  Pozycja Gracza: " + position.getPlayerPosition());
 
-        int baseDamage = attack.calculateDamage(playerFighter, playerState);
+        // Uwzględnij broń jeśli atak jest melee (calculateDamageWithEquipment zamiast calculateDamage)
+        int baseDamage = (attack instanceof AbstractMeleeAttack melee)
+                ? melee.calculateDamageWithEquipment(playerFighter.getPlayer(), playerState)
+                : attack.calculateDamage(playerFighter, playerState);
+
         int hitChance = attack.attackAccuracyValue(playerFighter, playerState);
-        boolean hits = new Random().nextInt(100) < hitChance;
+        boolean hits = random.nextInt(100) < hitChance;
 
         if (!hits) {
             System.out.println("  ❌ CHYBIENIE! (" + hitChance + "% szansa) - Atak minął cel!");
@@ -277,10 +291,6 @@ public class ArenaCombatEngine {
         System.out.println("  Pozycja: " + position.getRivalPosition());
         System.out.println();
 
-        // Pobierz ataki i ruchy dla rywala
-        java.util.List<AbstractAttack> rivalAttacks = initializeAttacks();
-        java.util.List<Move> rivalMoves = initializeMoves();
-
         // AI decyzja - makeDecision zwraca Object (AbstractAttack, Move, lub AbstractRegeneratePlayer)
         Object action = aiSystem.makeDecision(rivalFighter.getPlayer(), playerFighter.getPlayer(), rivalAttacks, rivalMoves, position);
 
@@ -321,9 +331,13 @@ public class ArenaCombatEngine {
             return;
         }
 
-        int baseDamage = attack.calculateDamage(rivalFighter, rivalState);
+        // Uwzględnij broń rywala jeśli atak jest melee
+        int baseDamage = (attack instanceof AbstractMeleeAttack melee)
+                ? melee.calculateDamageWithEquipment(rivalFighter.getPlayer(), rivalState)
+                : attack.calculateDamage(rivalFighter, rivalState);
+
         int hitChance = attack.attackAccuracyValue(rivalFighter, rivalState);
-        boolean hits = new Random().nextInt(100) < hitChance;
+        boolean hits = random.nextInt(100) < hitChance;
 
         if (!hits) {
             System.out.println("  ❌ CHYBIENIE! (" + hitChance + "% szansa) - Atak rywala minął!");
@@ -435,16 +449,15 @@ public class ArenaCombatEngine {
                 System.out.println("👑 ZWYCIĘZCA: " + rivalFighter.getName() + " (Rywal)");
                 System.out.println("💔 Porażka... Dostalenś pierwszy cios!");
                 audienceBar.removeAudienceOnLoss(20);
-                playerFighter.getPlayer().spendMoney(100);
+                playerFighter.getPlayer().spendMoney(EconomySystem.calculateSparringLossPenalty());
             }
             // Jeśli rywal stracił HP (a gracz nie), gracz wygrywa
             else if (rivalHasBleeding && !playerHasBleeding) {
                 winner = playerFighter.getPlayer();
                 System.out.println("👑 ZWYCIĘZCA: " + playerFighter.getName() + " (Ty!)");
                 System.out.println("🎉 Zwycięstwo! Zadałeś pierwszy cios!");
-                int baseReward = 200;
                 double multiplier = audienceBar.getMoneyMultiplier();
-                int finalReward = (int) (baseReward * multiplier);
+                int finalReward = EconomySystem.calculateSparringReward(multiplier);
                 playerFighter.grantVictoryRewards(50, finalReward);
                 System.out.println("💰 Nagroda: " + finalReward + " monet (multiplier: " + String.format("%.1f%%", multiplier * 100) + ")");
             }
@@ -455,9 +468,8 @@ public class ArenaCombatEngine {
                     winner = playerFighter.getPlayer();
                     System.out.println("👑 ZWYCIĘZCA: " + playerFighter.getName() + " (Ty!)");
                     System.out.println("🎉 Zwycięstwo! Miałeś więcej zdrowia");
-                    int baseReward = 200;
                     double multiplier = audienceBar.getMoneyMultiplier();
-                    int finalReward = (int) (baseReward * multiplier);
+                    int finalReward = EconomySystem.calculateSparringReward(multiplier);
                     playerFighter.grantVictoryRewards(50, finalReward);
                     System.out.println("💰 Nagroda: " + finalReward + " monet (multiplier: " + String.format("%.1f%%", multiplier * 100) + ")");
                 } else {
@@ -465,7 +477,7 @@ public class ArenaCombatEngine {
                     System.out.println("👑 ZWYCIĘZCA: " + rivalFighter.getName() + " (Rywal)");
                     System.out.println("💔 Porażka... Rywal miał więcej zdrowia");
                     audienceBar.removeAudienceOnLoss(20);
-                    playerFighter.getPlayer().spendMoney(100);
+                    playerFighter.getPlayer().spendMoney(EconomySystem.calculateSparringLossPenalty());
                 }
             } else {
                 // Nikt nie ma obrażeń? Niemożliwe - ale na wszelki wypadek rywalu dajemy zwycięstwo
@@ -473,7 +485,7 @@ public class ArenaCombatEngine {
                 System.out.println("👑 ZWYCIĘZCA: " + rivalFighter.getName() + " (Rywal - system error recovery)");
                 System.out.println("⚠️  System Error: obaj bez obrażeń?!");
                 audienceBar.removeAudienceOnLoss(20);
-                playerFighter.getPlayer().spendMoney(100);
+                playerFighter.getPlayer().spendMoney(EconomySystem.calculateSparringLossPenalty());
             }
         } else {
             // TOURNAMENT: Death Match
@@ -482,14 +494,13 @@ public class ArenaCombatEngine {
                 System.out.println("👑 ZWYCIĘZCA: " + rivalFighter.getName() + " (Rywal)");
                 System.out.println("💔 Porażka na polu bitwy...");
                 audienceBar.removeAudienceOnLoss(35);
-                playerFighter.getPlayer().spendMoney(200);
+                playerFighter.getPlayer().spendMoney(EconomySystem.calculateTournamentLossPenalty());
             } else {
                 winner = playerFighter.getPlayer();
                 System.out.println("👑 ZWYCIĘZCA: " + playerFighter.getName() + " (Ty!)");
                 System.out.println("🎉 Zwycięstwo! Jesteś królem Areny!");
-                int baseReward = 500;
                 double multiplier = audienceBar.getMoneyMultiplier();
-                int finalReward = (int) (baseReward * multiplier);
+                int finalReward = EconomySystem.calculateTournamentReward(multiplier);
                 playerFighter.grantVictoryRewards(50, finalReward);
                 System.out.println("💰 Nagroda: " + finalReward + " monet (multiplier: " + String.format("%.1f%%", multiplier * 100) + ")");
             }
@@ -504,20 +515,20 @@ public class ArenaCombatEngine {
 
     // ==================== HELPER METHODS ====================
 
-    private java.util.List<AbstractAttack> initializeAttacks() {
-        java.util.List<AbstractAttack> attacks = new java.util.ArrayList<>();
+    private List<AbstractAttack> initializeAttacks() {
+        List<AbstractAttack> attacks = new ArrayList<>();
         attacks.add(new QuickMeleeAttack());
         attacks.add(new MediumMeleeAttack());
         attacks.add(new StrongMeleeAttack());
         return attacks;
     }
 
-    private java.util.List<Move> initializeMoves() {
-        java.util.List<Move> moves = new java.util.ArrayList<>();
-        moves.add(new game.player.combat.movement.Step(MovementDirection.LEFT));
-        moves.add(new game.player.combat.movement.Step(MovementDirection.RIGHT));
-        moves.add(new game.player.combat.movement.Jump(MovementDirection.LEFT));
-        moves.add(new game.player.combat.movement.Jump(MovementDirection.RIGHT));
+    private List<Move> initializeMoves() {
+        List<Move> moves = new ArrayList<>();
+        moves.add(new Step(MovementDirection.LEFT));
+        moves.add(new Step(MovementDirection.RIGHT));
+        moves.add(new Jump(MovementDirection.LEFT));
+        moves.add(new Jump(MovementDirection.RIGHT));
         return moves;
     }
 

@@ -4,6 +4,8 @@ import game.constants.GameConstants;
 import game.player.Player;
 import game.player.PlayerAttribute;
 
+import java.util.Random;
+
 /**
  * Odpowiada za przeliczanie atrybutów i poziomu Rywala.
  *
@@ -14,6 +16,8 @@ import game.player.PlayerAttribute;
  * 4. Rozdziel nową pulę punktów na atrybuty Rywala
  */
 public class RivalAttributesRecalculator {
+
+    private static final Random RANDOM = new Random();
 
     private static final double MIN_ATTRIBUTE_MODIFIER = 0.8;
     private static final double MAX_ATTRIBUTE_MODIFIER = 1.2;
@@ -144,11 +148,8 @@ public class RivalAttributesRecalculator {
             game.player.attributes.CharacterAttributeType.values();
 
         // Losowe rozprowadzenie
-        java.util.Random random = new java.util.Random();
-
         for (int i = 0; i < pointsToDistribute; i++) {
-            // Wybierz LOSOWY atrybut
-            int randomIndex = random.nextInt(attributeTypes.length);
+            int randomIndex = RANDOM.nextInt(attributeTypes.length);
             // Upgrade'uj go
             rival.upgradeAttribute(attributeTypes[randomIndex]);
         }
@@ -164,9 +165,8 @@ public class RivalAttributesRecalculator {
      * @return wartość z zakresu [0.8, 1.2]
      */
     private static double generateRandomModifier() {
-        java.util.Random random = new java.util.Random();
         // [0.0 - 1.0) * (1.2 - 0.8) + 0.8 = [0.8 - 1.2]
-        return random.nextDouble() * (MAX_ATTRIBUTE_MODIFIER - MIN_ATTRIBUTE_MODIFIER) + MIN_ATTRIBUTE_MODIFIER;
+        return RANDOM.nextDouble() * (MAX_ATTRIBUTE_MODIFIER - MIN_ATTRIBUTE_MODIFIER) + MIN_ATTRIBUTE_MODIFIER;
     }
 
     /**

@@ -366,7 +366,7 @@ public class ShopMenu {
         return input.equals("t") || input.equals("tak");
     }
 
-    private void showPlayerStats(Player player) {
+    public void showPlayerStats(Player player) {
         printHeader(player);
         System.out.println("=== STATYSTYKI ===");
         System.out.println("  XP:         " + player.getXp() + " / " + (player.getLevel() * 150));
