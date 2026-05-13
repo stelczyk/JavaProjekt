@@ -9,9 +9,9 @@ public class ItemCatalog {
             new Weapon("Kastet",               80,  1, 2, 3),
             new Weapon("Kij bejsbolowy",      100,  1, 3, 1),
             new Weapon("Rękawice bokserskie", 120,  2, 2, 2),
-            new Weapon("Raca",                150,  3, 1, 4),
+            new Weapon("Raca",                150,  3, 1, 4, true),   // jednorazowa
             new Weapon("Maczeta",             300,  5, 5, 2),
-            new Weapon("Mołotow",             400,  7, 2, 5)
+            new Weapon("Mołotow",             400,  7, 2, 5, true)    // jednorazowy
     );
 
     public static final List<Clothing> CLOTHING = List.of(

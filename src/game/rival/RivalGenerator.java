@@ -1,11 +1,9 @@
 package game.rival;
 
-import game.player.CharacterBodyType;
 import game.player.Player;
 import game.player.PlayerProfile;
 import locations.Shop;
 
-import java.util.Random;
 
 /**
  * RivalGenerator - Orchestrator dla systemu generowania Rywala.
@@ -58,22 +56,17 @@ public class RivalGenerator {
         Player rival = DeepCloneUtils.deepClonePlayer(player);
         System.out.println("        ✓ Klon utworzony (bezpieczny, niezależny)");
 
-        // STEP 2: Modyfikacja tożsamości
-        System.out.println("\n[STEP 2] Modyfikacja tożsamości Rywala...");
-        modifyRivalIdentity(rival);
-        System.out.println("        ✓ Tożsamość: " + rival.getProfile().getPlayerNickname());
-
-        // STEP 3: Przeliczenie atrybutów
-        System.out.println("\n[STEP 3] Przeliczanie atrybutów Rywala...");
+        // STEP 2: Przeliczenie atrybutów
+        System.out.println("\n[STEP 2] Przeliczanie atrybutów Rywala...");
         int rivalLevel = RivalAttributesRecalculator.recalculateRivalAttributes(player, rival);
         System.out.println("        ✓ Level Rywala: " + rivalLevel);
         System.out.println("        ✓ Suma atrybutów: " + calculateTotalAttributeSum(rival));
 
         // STEP 4: Ustaw level dla Rywala (bez XP)
-        reflectiveSetLevel(rival, rivalLevel);
+        rival.initLevel(rivalLevel);
 
         // STEP 5: Przeliczenie i konfiguracja ekwipunku
-        System.out.println("\n[STEP 4] Przygotowanie ekwipunku Rywala...");
+        System.out.println("\n[STEP 3] Przygotowanie ekwipunku Rywala...");
         System.out.println("        Budżet: " + rival.getMoney() + " + nowy budżet");
         RivalEquipmentManager.equipRival(player, rival, rivalLevel, shop);
 
@@ -86,58 +79,6 @@ public class RivalGenerator {
         System.out.println("═══════════════════════════════════════════════════════════\n");
 
         return rival;
-    }
-
-    /**
-     * Modyfikuje tożsamość Rywala.
-     *
-     * Zmienia:
-     * - Imię (nickname + "_Rival" lub losowy)
-     * - Typ postaci (losowy z dostępnych)
-     *
-     * @param rival rival do modyfikacji
-     */
-    private void modifyRivalIdentity(Player rival) {
-        Random random = new Random();
-
-        // OPCJA 1: Zmień imię na losowe
-        String[] rivalNames = {
-            "Shadow", "Beast", "Phantom", "Tytan", "Ninja",
-            "Czempion", "Destroyer", "Gladiator", "Predator", "Terminator",
-            "Viktor", "Aleksei", "Dmitri", "Igor", "Sergei",
-            "Karol", "Piotr", "Zbigniew", "Stanisław", "Tadeusz"
-        };
-
-        String randomRivalName = rivalNames[random.nextInt(rivalNames.length)];
-        // Niestety PlayerProfile jest immutable, więc zmiana imienia jest ograniczona
-        // W przyszłości można byłoby dodać setter lub builder
-
-        // OPCJA 2: Typ postaci - to by było fajne, ale teraz jest zbyt głęoko w strukturze
-        // CharacterBodyType będzie domyślny (DEAFULTBODY)
-
-        // Nie zmieniamy bezpośrednio profilu, bo jest immutable
-        // Zmieniliśmy to już w DeepCloneUtils (dodaliśmy "_Rival" do imienia)
-    }
-
-    /**
-     * Ustawia level dla Riwala (refleksja, bo w grze nie ma settera).
-     *
-     * To jest workaround - w przyszłości należy dodać publiczny setter
-     * w klasie Player dla możliwości konfiguracji poziomu.
-     *
-     * @param rival rival
-     * @param level nowy level
-     */
-    private void reflectiveSetLevel(Player rival, int level) {
-        try {
-            java.lang.reflect.Field levelField = Player.class.getDeclaredField("level");
-            levelField.setAccessible(true);
-            levelField.setInt(rival, level);
-            levelField.setAccessible(false);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            System.err.println("[ERROR] Nie można ustawić level dla Rywala: " + e.getMessage());
-            e.printStackTrace();
-        }
     }
 
     /**

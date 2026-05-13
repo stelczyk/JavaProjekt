@@ -1,7 +1,7 @@
 package game.player;
 
 public enum CharacterBodyType {
-    DEAFULTBODY(180,75),
+    DEFAULTBODY(180, 75),
     KARKBODY(195,110),
     DILERBODY(165,60),
     KONFIDENTBODY(170,70),

@@ -1,5 +1,6 @@
 package locations;
 
+import game.player.CharacterPath;
 import game.player.Player;
 import game.player.PlayerProfile;
 import game.player.attributes.CharacterAttributeType;
@@ -28,9 +29,12 @@ public class CharacterCreationMenu {
         System.out.println("  Zdecyduj kim chcesz być na arenie.");
 
         distributeStartingPoints(player);
+        choosePath(player);
 
         System.out.println();
         System.out.println("  *** Postać gotowa! Powodzenia na arenie. ***");
+        System.out.printf("  Ścieżka: %s — %s%n",
+                player.getPath().getDisplayName(), player.getPath().getDescription());
         System.out.print("  [Enter] Kontynuuj...");
         scanner.nextLine();
 
@@ -145,6 +149,36 @@ public class CharacterCreationMenu {
             case VALOR       -> "  ← tłum, CallToFriends";
             case CONNECTIONS -> "  ← rabat w sklepie (max 20%)";
         };
+    }
+
+    /**
+     * Wybór ścieżki postaci — decyduje o stylu walki.
+     * Kacper używa player.getPath() w atakach specjalnych.
+     */
+    private void choosePath(Player player) {
+        System.out.println();
+        System.out.println("+-----------------------------------------+");
+        System.out.println("|  WYBIERZ ŚCIEŻKĘ POSTACI                |");
+        System.out.println("+-----------------------------------------+");
+
+        CharacterPath[] paths = CharacterPath.values();
+        for (int i = 0; i < paths.length; i++) {
+            System.out.printf("  [%d] %-10s — %s%n",
+                    i + 1, paths[i].getDisplayName(), paths[i].getDescription());
+        }
+
+        while (true) {
+            System.out.print("  Wybór (1-" + paths.length + "): ");
+            try {
+                int choice = Integer.parseInt(scanner.nextLine().trim());
+                if (choice >= 1 && choice <= paths.length) {
+                    player.setPath(paths[choice - 1]);
+                    System.out.println("  Wybrałeś: " + paths[choice - 1].getDisplayName());
+                    return;
+                }
+            } catch (NumberFormatException ignored) {}
+            System.out.println("  Nieprawidłowy wybór.");
+        }
     }
 
     // -------------------------------------------------------

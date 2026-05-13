@@ -1,10 +1,7 @@
 package game.rival;
 
-import game.items.ItemCatalog;
-import game.player.CharacterBodyType;
 import game.player.Player;
 import game.player.PlayerAttribute;
-import game.player.PlayerInventory;
 import game.player.PlayerProfile;
 
 /**
@@ -56,61 +53,10 @@ public class DeepCloneUtils {
     }
 
     /**
-     * Klonuje atrybuty z jednego obiektu do drugiego.
-     * Zapewnia, że każdy atrybut jest niezależny.
+     * Kopiuje atrybuty bezpośrednio (O(1) zamiast poprzedniego O(N) przez pętlę upgradeAttribute).
      */
     private static void cloneAttributes(PlayerAttribute source, PlayerAttribute target) {
-        // Każdy atrybut jest zmienną prymitywną (int)
-        // Musimy je "przeskalować" ręcznie
-
-        // Pobierz wartości ze źródła
-        int sourceStrength = source.getStrength();
-        int sourceDefense = source.getDefense();
-        int sourceAccuracy = source.getAccuracy();
-        int sourceStamina = source.getStamina();
-        int sourceBrave = source.getBrave();
-        int sourceCunning = source.getCunning();
-        int sourceSpeed = source.getSpeed();
-        int sourcePathology = source.getPathology();
-        int sourceValor = source.getValor();
-        int sourceConnections = source.getConnections();
-
-        // Cel: Zmień atrybuty na TARGET (najpierw usuń domyślne)
-        // Ponieważ upgradeAttribute() dodaje DEFAULT_BOOST_ATTRIBUTE = 1
-        // musimy obliczyć różnicę
-
-        game.player.attributes.CharacterAttributeType[] attributeTypes =
-            game.player.attributes.CharacterAttributeType.values();
-
-        int[] sourceValues = {
-            sourceStrength, sourceDefense, sourceAccuracy, sourceStamina,
-            sourceBrave, sourceCunning, sourceSpeed, sourcePathology,
-            sourceValor, sourceConnections
-        };
-
-        int[] targetValues = {
-            target.getStrength(), target.getDefense(), target.getAccuracy(), target.getStamina(),
-            target.getBrave(), target.getCunning(), target.getSpeed(), target.getPathology(),
-            target.getValor(), target.getConnections()
-        };
-
-        // Dla każdego atrybutu: upgrade'uj tyle razy, aby osiągnąć wartość źródła
-        for (int i = 0; i < attributeTypes.length; i++) {
-            int difference = sourceValues[i] - targetValues[i];
-            for (int j = 0; j < difference; j++) {
-                target.upgradeAttribute(attributeTypes[i]);
-            }
-        }
-    }
-
-    /**
-     * Tworzy PUSTE inventory dla rywala (czysty start).
-     * Ekwipunek będzie napełniony przez RivalEquipmentManager.
-     */
-    public static PlayerInventory createEmptyInventory() {
-        return new PlayerInventory();
-        // Lista ownedItems jest pusta, nie ma ekwipunku
-        // Wszystko jest NULL
+        target.copyFrom(source);
     }
 }
 

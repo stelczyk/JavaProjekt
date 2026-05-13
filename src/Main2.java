@@ -1,6 +1,7 @@
 import game.arena.*;
 import game.player.Player;
 import game.player.PlayerProfile;
+import locations.CharacterCreationMenu;
 import locations.Shop;
 import locations.ShopMenu;
 
@@ -67,23 +68,9 @@ public class Main2 {
     }
 
     private static void createPlayer() {
-        System.out.println("╔════════════════════════════════════════════════════════════╗");
-        System.out.println("║                    TWORZENIE POSTACI                       ║");
-        System.out.println("╚════════════════════════════════════════════════════════════╝\n");
-
-        System.out.print("Jak się masz? Podaj nazwę swojej postaci: ");
-        String nickname = scanner.nextLine().trim();
-
-        if (nickname.isEmpty()) {
-            nickname = "Wojownik";
-        }
-
-        player = new Player(new PlayerProfile(nickname, 25));
-        player.earnMoney(1000); // Startowe pieniądze
-
-        System.out.println("\n✅ Postać " + nickname + " została utworzona!");
-        System.out.println("   Monety: " + player.getMoney());
-        System.out.println("   Level: " + player.getLevel() + "\n");
+        // Używamy CharacterCreationMenu: nick, wiek, rozdanie punktów, wybór ścieżki
+        CharacterCreationMenu creationMenu = new CharacterCreationMenu(scanner);
+        player = creationMenu.create();
     }
 
     /**
@@ -105,8 +92,7 @@ public class Main2 {
         System.out.print("Wybierz opcję (1-5): ");
 
         try {
-            int choice = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
+            int choice = Integer.parseInt(scanner.nextLine().trim());
 
             switch (choice) {
                 case 1:
@@ -128,8 +114,7 @@ public class Main2 {
                     System.out.println("❌ Niepoprawny wybór!");
             }
         } catch (Exception e) {
-            System.out.println("❌ Błąd inputu!");
-            scanner.nextLine();
+            System.out.println("❌ Nieprawidłowy wybór — podaj liczbę od 1 do 5.");
         }
     }
 
