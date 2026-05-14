@@ -1,11 +1,14 @@
 package game.arena;
 
+import game.items.Weapon;
+import game.player.CharacterPath;
 import game.player.Player;
 import game.player.combat.attack.AbstractAttack;
 import game.player.combat.attack.melee.AbstractMeleeAttack;
 import game.player.combat.attack.melee.QuickMeleeAttack;
 import game.player.combat.attack.melee.MediumMeleeAttack;
 import game.player.combat.attack.melee.StrongMeleeAttack;
+import game.player.combat.attack.special.LeaderScream;
 import game.player.combat.movement.Move;
 import game.player.combat.movement.MovementDirection;
 import game.player.combat.movement.Step;
@@ -51,8 +54,18 @@ public class ArenaCombatEngine {
     private int turnCount = 0;
     private boolean matchActive = true;
     private Player winner;
+
+    // Śledzenie do FightResult i statystyk
+    private int playerDamageDealt = 0;
+    private int rivalDamageDealt  = 0;
+    private int rewardMoney       = 0;
+
     private static final int MAX_TURNS = 50;
     private static final int TURN_LIMIT_WARNING = 30;
+
+    // Bonusy ścieżek - czytelne stałe zamiast magic numbers
+    private static final double WOJOWNIK_MELEE_DAMAGE_BONUS = 1.15; // +15%
+    private static final int    CWANIAK_DODGE_PENALTY       = 10;   // -10 do hitChance
 
     /**
      * Konstruktor - inicjalizacja silnika walki.
@@ -73,7 +86,7 @@ public class ArenaCombatEngine {
     /**
      * Główna metoda - rozpoczyna walkę.
      */
-    public void startMatch(Player player, Player rival) {
+    public FightResult startMatch(Player player, Player rival) {
         System.out.println("\n╔════════════════════════════════════════════════════════════╗");
         System.out.println("║          🏛️  ARENA COMBAT (" + mode.getDescription() + ")  🏛️          ║");
         System.out.println("╚════════════════════════════════════════════════════════════╝\n");
@@ -100,6 +113,37 @@ public class ArenaCombatEngine {
 
         // STEP 4: Zakończenie
         determineWinner();
+
+        // STEP 5: Zbuduj wynik dla frontendu/Main2 + zaktualizuj statystyki gracza
+        return buildAndApplyResult(player);
+    }
+
+    /**
+     * Buduje FightResult na podstawie stanu po walce i aktualizuje statystyki gracza.
+     */
+    private FightResult buildAndApplyResult(Player player) {
+        boolean playerKO = !playerState.isAlive();
+        boolean rivalKO  = !rivalState.isAlive();
+
+        FightResult.Outcome outcome;
+        if (winner == player) {
+            outcome = FightResult.Outcome.PLAYER_WIN;
+            player.recordWin();
+        } else if (winner != null) {
+            outcome = FightResult.Outcome.PLAYER_LOSS;
+            player.recordLoss();
+        } else {
+            outcome = FightResult.Outcome.DRAW;
+        }
+
+        player.addDamageDealt(playerDamageDealt);
+        if (rivalKO) player.recordKnockout();
+
+        return new FightResult(
+                outcome, winner, turnCount, rewardMoney,
+                playerDamageDealt, rivalDamageDealt,
+                playerKO, rivalKO
+        );
     }
 
     /**
@@ -175,6 +219,13 @@ public class ArenaCombatEngine {
     private void executePlayerTurn() {
         System.out.println("\n>>> RUCH GRACZA <<<\n");
 
+        // STUN: ogłuszony gracz traci turę
+        if (playerState.isStunned()) {
+            System.out.println("  💫 OGŁUSZONY! Tracisz tę turę.");
+            playerState.setStunned(false);
+            return;
+        }
+
         // Wyświetl obecny stan
         System.out.println("[STAN GRACZA]");
         System.out.println("  HP: " + playerState.getCurrentHp() + "/" + playerState.getMaxHp());
@@ -206,12 +257,25 @@ public class ArenaCombatEngine {
                 ? melee.calculateDamageWithEquipment(playerFighter.getPlayer(), playerState)
                 : attack.calculateDamage(playerFighter, playerState);
 
+        // PATH BONUS: WOJOWNIK +15% dla ataków wręcz
+        if (attack instanceof AbstractMeleeAttack
+                && playerFighter.getPlayer().getPath() == CharacterPath.WOJOWNIK) {
+            baseDamage = (int) (baseDamage * WOJOWNIK_MELEE_DAMAGE_BONUS);
+            System.out.println("  🥊 Bonus WOJOWNIKA: +15% obrażeń wręcz");
+        }
+
         int hitChance = attack.attackAccuracyValue(playerFighter, playerState);
+        // PATH BONUS: CWANIAK broniący się ma +10% szansy na unik
+        if (rivalFighter.getPlayer().getPath() == CharacterPath.CWANIAK) {
+            hitChance -= CWANIAK_DODGE_PENALTY;
+            System.out.println("  🐺 Rywal-CWANIAK próbuje uniknąć: -10% trafienia");
+        }
         boolean hits = random.nextInt(100) < hitChance;
 
         if (!hits) {
             System.out.println("  ❌ CHYBIENIE! (" + hitChance + "% szansa) - Atak minął cel!");
             attack.applySpecialEffects(playerState); // Stamina burned anyway
+            consumeWeaponIfNeeded(playerFighter.getPlayer());
             return;
         }
 
@@ -221,6 +285,9 @@ public class ArenaCombatEngine {
         DamageCalculator.DamageResult result = damageCalc.applyDamage(playerFighter.getPlayer(), rivalFighter.getPlayer(), baseDamage, rivalState, mode);
         System.out.println("  💥 Obrażenia: " + result.toString());
 
+        // Śledzenie obrażeń dla statystyk i FightResult
+        playerDamageDealt += result.totalDamage;
+
         if (result.wasCritical) {
             System.out.println("  ⚡ CIOS KRYTYCZNY!");
         }
@@ -228,8 +295,20 @@ public class ArenaCombatEngine {
             System.out.println("  🔥 INSTANT KILL!");
         }
 
+        // LEADER SCREAM: roll na stuna jeśli atak to ryk
+        if (attack instanceof LeaderScream scream) {
+            double stunChance = scream.calculateStunChance(playerFighter);
+            if (random.nextDouble() < stunChance) {
+                rivalState.setStunned(true);
+                System.out.println("  💫 RYWAL OGŁUSZONY! Traci następną turę.");
+            }
+        }
+
         // Konsumuj staminę
         attack.applySpecialEffects(playerState);
+
+        // Zużyj broń jednorazową (Raca / Mołotow)
+        consumeWeaponIfNeeded(playerFighter.getPlayer());
 
         // Publiczność
         int previousAudience = audienceBar.getCurrentAudience();
@@ -239,6 +318,18 @@ public class ArenaCombatEngine {
         int audienceDelta = audienceBar.getCurrentAudience() - previousAudience;
 
         System.out.println("  📢 Publiczność: " + audienceBar.getBarVisualization() + (audienceDelta >= 0 ? " ↑" : " ↓") + Math.abs(audienceDelta));
+    }
+
+    /**
+     * Jednorazowa broń (Raca, Mołotow) jest zużywana po użyciu w walce.
+     */
+    private void consumeWeaponIfNeeded(Player attacker) {
+        Weapon used = attacker.getInventory().getEquippedWeapon();
+        if (used != null && used.isConsumable()) {
+            attacker.getInventory().unequipWeapon();
+            attacker.getInventory().removeItem(used);
+            System.out.println("  🔥 " + used.getName() + " zostało zużyte!");
+        }
     }
 
     /**
@@ -283,6 +374,13 @@ public class ArenaCombatEngine {
      */
     private void executeRivalTurn() {
         System.out.println("\n>>> RUCH RYWALA (AI) <<<\n");
+
+        // STUN: ogłuszony rywal traci turę
+        if (rivalState.isStunned()) {
+            System.out.println("  💫 Rywal jest OGŁUSZONY! Traci turę.");
+            rivalState.setStunned(false);
+            return;
+        }
 
         System.out.println("[STAN RYWALA]");
         System.out.println("  HP: " + rivalState.getCurrentHp() + "/" + rivalState.getMaxHp());
@@ -336,12 +434,24 @@ public class ArenaCombatEngine {
                 ? melee.calculateDamageWithEquipment(rivalFighter.getPlayer(), rivalState)
                 : attack.calculateDamage(rivalFighter, rivalState);
 
+        // PATH BONUS: WOJOWNIK +15% dla rywala (rywal też może mieć ścieżkę)
+        if (attack instanceof AbstractMeleeAttack
+                && rivalFighter.getPlayer().getPath() == CharacterPath.WOJOWNIK) {
+            baseDamage = (int) (baseDamage * WOJOWNIK_MELEE_DAMAGE_BONUS);
+        }
+
         int hitChance = attack.attackAccuracyValue(rivalFighter, rivalState);
+        // PATH BONUS: gracz-CWANIAK ma +10% szansy na unik
+        if (playerFighter.getPlayer().getPath() == CharacterPath.CWANIAK) {
+            hitChance -= CWANIAK_DODGE_PENALTY;
+            System.out.println("  🐺 CWANIAK próbuje uniknąć: -10% trafienia rywala");
+        }
         boolean hits = random.nextInt(100) < hitChance;
 
         if (!hits) {
             System.out.println("  ❌ CHYBIENIE! (" + hitChance + "% szansa) - Atak rywala minął!");
             attack.applySpecialEffects(rivalState);
+            consumeWeaponIfNeeded(rivalFighter.getPlayer());
             return;
         }
 
@@ -350,6 +460,9 @@ public class ArenaCombatEngine {
         DamageCalculator.DamageResult result = damageCalc.applyDamage(rivalFighter.getPlayer(), playerFighter.getPlayer(), baseDamage, playerState, mode);
         System.out.println("  💥 Obrażenia: " + result.toString());
 
+        // Śledzenie obrażeń zadanych przez rywala
+        rivalDamageDealt += result.totalDamage;
+
         if (result.wasCritical) {
             System.out.println("  ⚡ CIOS KRYTYCZNY!");
         }
@@ -357,7 +470,17 @@ public class ArenaCombatEngine {
             System.out.println("  🔥 INSTANT KILL!");
         }
 
+        // LEADER SCREAM rywala → stun gracza
+        if (attack instanceof LeaderScream scream) {
+            double stunChance = scream.calculateStunChance(rivalFighter);
+            if (random.nextDouble() < stunChance) {
+                playerState.setStunned(true);
+                System.out.println("  💫 GRACZ OGŁUSZONY! Tracisz następną turę.");
+            }
+        }
+
         attack.applySpecialEffects(rivalState);
+        consumeWeaponIfNeeded(rivalFighter.getPlayer());
         
         // Publiczność - reakoja na atak rywala
         int crowdAppeal = attack.getCrowdAppeal();
@@ -458,6 +581,7 @@ public class ArenaCombatEngine {
                 System.out.println("🎉 Zwycięstwo! Zadałeś pierwszy cios!");
                 double multiplier = audienceBar.getMoneyMultiplier();
                 int finalReward = EconomySystem.calculateSparringReward(multiplier);
+                rewardMoney = finalReward;
                 playerFighter.grantVictoryRewards(50, finalReward);
                 System.out.println("💰 Nagroda: " + finalReward + " monet (multiplier: " + String.format("%.1f%%", multiplier * 100) + ")");
             }
@@ -501,6 +625,7 @@ public class ArenaCombatEngine {
                 System.out.println("🎉 Zwycięstwo! Jesteś królem Areny!");
                 double multiplier = audienceBar.getMoneyMultiplier();
                 int finalReward = EconomySystem.calculateTournamentReward(multiplier);
+                rewardMoney = finalReward;
                 playerFighter.grantVictoryRewards(50, finalReward);
                 System.out.println("💰 Nagroda: " + finalReward + " monet (multiplier: " + String.format("%.1f%%", multiplier * 100) + ")");
             }

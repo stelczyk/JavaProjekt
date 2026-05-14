@@ -160,7 +160,8 @@ public class Main2 {
 
         // WALKA TUROWA
         ArenaCombatEngine engine = new ArenaCombatEngine(CombatMode.SPARRING, scanner, audienceBar);
-        engine.startMatch(player, match.getRival());
+        FightResult result = engine.startMatch(player, match.getRival());
+        displayFightSummary(result);
 
         System.out.print("\nNaciśnij Enter aby wrócić do menu...");
         scanner.nextLine();
@@ -196,10 +197,35 @@ public class Main2 {
 
         // WALKA TUROWA
         ArenaCombatEngine engine = new ArenaCombatEngine(CombatMode.TOURNAMENT, scanner, audienceBar);
-        engine.startMatch(player, match.getRival());
+        FightResult result = engine.startMatch(player, match.getRival());
+        displayFightSummary(result);
 
         System.out.print("\nNaciśnij Enter aby wrócić do menu...");
         scanner.nextLine();
+    }
+
+    /**
+     * Wyświetla ekran podsumowania walki na podstawie FightResult.
+     * Frontend zastąpi to po prostu ekranem UI - logika ta sama.
+     */
+    private static void displayFightSummary(FightResult result) {
+        System.out.println("\n╔════════════════════════════════════════════════════════════╗");
+        System.out.println("║                  📋 PODSUMOWANIE WALKI 📋                 ║");
+        System.out.println("╚════════════════════════════════════════════════════════════╝");
+        System.out.println("  Wynik: " + switch (result.outcome()) {
+            case PLAYER_WIN  -> "🏆 ZWYCIĘSTWO";
+            case PLAYER_LOSS -> "💔 PORAŻKA";
+            case DRAW        -> "🤝 REMIS";
+        });
+        System.out.println("  Tury: " + result.turns());
+        System.out.println("  Obrażenia zadane: " + result.playerDamageDealt());
+        System.out.println("  Obrażenia otrzymane: " + result.rivalDamageDealt());
+        if (result.moneyEarned() > 0) {
+            System.out.println("  💰 Nagroda: " + result.moneyEarned() + " monet");
+        }
+        if (result.rivalKnockedOut()) {
+            System.out.println("  🔥 Knockout! Rywal padł na arenie.");
+        }
     }
 
     /**
@@ -216,6 +242,15 @@ public class Main2 {
         System.out.println("│ Level: " + player.getLevel());
         System.out.println("│ XP: " + player.getXp() + "/" + (player.getLevel() * 150));
         System.out.println("│ Monety: " + player.getMoney());
+        System.out.println("│ Ścieżka: " + player.getPath().getDisplayName());
+        System.out.println("└─────────────────────────────────────────────┘\n");
+
+        System.out.println("┌─ STATYSTYKI WALK ───────────────────────────┐");
+        System.out.printf( "│ Walki: %d   (W: %d  /  L: %d)%n",
+                player.getTotalFights(), player.getFightsWon(), player.getFightsLost());
+        System.out.printf( "│ Win rate: %.1f%%%n", player.getWinRate());
+        System.out.println("│ Łączne obrażenia: " + player.getTotalDamageDealt());
+        System.out.println("│ Knockouty: " + player.getKnockouts());
         System.out.println("└─────────────────────────────────────────────┘\n");
 
         System.out.println("┌─ ATRYBUTY ──────────────────────────────────┐");
@@ -238,9 +273,7 @@ public class Main2 {
             System.out.println("│ Broń: Brak");
         }
 
-        int totalArmor = player.getInventory().getTotalDefenseBonus();
-        int baseArmor = 0;
-        System.out.println("│ Pancerz: " + totalArmor + " (bazowy: " + baseArmor + ")");
+        System.out.println("│ Pancerz (z odzieży): " + player.getInventory().getTotalDefenseBonus());
         System.out.println("│ Bonus Szybkości: " + player.getInventory().getTotalSpeedBonus());
         System.out.println("└─────────────────────────────────────────────┘\n");
 

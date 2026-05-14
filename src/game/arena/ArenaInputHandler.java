@@ -1,9 +1,11 @@
 package game.arena;
 
+import game.player.CharacterPath;
 import game.player.combat.attack.AbstractAttack;
 import game.player.combat.attack.melee.QuickMeleeAttack;
 import game.player.combat.attack.melee.MediumMeleeAttack;
 import game.player.combat.attack.melee.StrongMeleeAttack;
+import game.player.combat.attack.special.LeaderScream;
 import game.player.combat.movement.Move;
 import game.player.combat.movement.Step;
 import game.player.combat.movement.Jump;
@@ -64,8 +66,11 @@ public class ArenaInputHandler {
             String status = canAttack ? "✓" : "✗";
             System.out.printf("  │ %d) %s %s\n", attackIndex, attack.getAttackName(), status);
             if (!canAttack) {
-                if (playerFighter.getState().getCurrentStamina() < 10) {
-                    System.out.println("  │    → Zbyt mało staminiy!");
+                if (attack instanceof LeaderScream
+                        && playerFighter.getPlayer().getPath() != CharacterPath.LIDER) {
+                    System.out.println("  │    → Tylko dla ścieżki LIDER!");
+                } else if (playerFighter.getState().getCurrentStamina() < attack.getStaminaCost()) {
+                    System.out.println("  │    → Zbyt mało staminy!");
                 } else if (currentDistance > playerMaxReach) {
                     System.out.println("  │    → Za daleko! (dystans " + currentDistance + " > zasięg " + playerMaxReach + ")");
                 }
@@ -170,6 +175,12 @@ public class ArenaInputHandler {
             return false;
         }
 
+        // LEADER SCREAM - dostępny tylko dla ścieżki LIDER
+        // (atak psychologiczny, nie wymaga zasięgu fizycznego)
+        if (attack instanceof LeaderScream) {
+            return fighter.getPlayer().getPath() == CharacterPath.LIDER;
+        }
+
         // Dystans - musi być w zwarciu (distance <= speed/2)
         int maxReach = fighter.getSpeed() / 2;
         return distance <= maxReach;
@@ -204,6 +215,8 @@ public class ArenaInputHandler {
         attacks.add(new QuickMeleeAttack());
         attacks.add(new MediumMeleeAttack());
         attacks.add(new StrongMeleeAttack());
+        // LeaderScream — odblokowany TYLKO dla ścieżki LIDER (filtrowane w displayActionMenu)
+        attacks.add(new LeaderScream());
         return attacks;
     }
 
