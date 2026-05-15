@@ -16,6 +16,12 @@ public class Player {
     private int statPointsAvailable;
     private CharacterPath path;
 
+    // Statystyki walk - widoczne w profilu, używane przez frontend
+    private int fightsWon;
+    private int fightsLost;
+    private int totalDamageDealt;
+    private int knockouts;
+
     public Player(PlayerProfile profile) {
         this.profile = profile;
         this.attributes = new PlayerAttribute();
@@ -124,4 +130,26 @@ public class Player {
             this.level = level;
         }
     }
+
+    // ==================== Statystyki walk ====================
+
+    public int getFightsWon()         { return fightsWon; }
+    public int getFightsLost()        { return fightsLost; }
+    public int getTotalDamageDealt()  { return totalDamageDealt; }
+    public int getKnockouts()         { return knockouts; }
+
+    public int getTotalFights() {
+        return fightsWon + fightsLost;
+    }
+
+    /** Procent wygranych walk (0-100). Zwraca 0 jeśli gracz jeszcze nie walczył. */
+    public double getWinRate() {
+        int total = getTotalFights();
+        return total == 0 ? 0.0 : (fightsWon * 100.0) / total;
+    }
+
+    public void recordWin()             { fightsWon++; }
+    public void recordLoss()            { fightsLost++; }
+    public void addDamageDealt(int dmg) { totalDamageDealt += Math.max(0, dmg); }
+    public void recordKnockout()        { knockouts++; }
 }
